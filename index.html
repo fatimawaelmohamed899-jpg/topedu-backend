@@ -110,11 +110,13 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       border-top-left-radius: 4px;
     }
-    /* Markdown Formatted Elements within Bot Response */
     .msg-row.bot .bubble strong {
       color: #0284c7;
       font-weight: 700;
     }
+    .msg-row.bot .bubble p { margin-bottom: 8px; }
+    .msg-row.bot .bubble p:last-child { margin-bottom: 0; }
+    .msg-row.bot .bubble hr { border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0; }
     .msg-row.bot .bubble ul, .msg-row.bot .bubble ol {
       margin-left: 20px;
       margin-top: 8px;
@@ -246,10 +248,121 @@
     <div class="msg-row bot">
       <div class="avatar">🤖</div>
       <div class="bubble">
-        👋 **Welcome to TopEdu Academy!**
+        👋 <strong>Welcome to TopEdu Academy!</strong><br><br>
+        I am your AI Student Counselor. How can I assist you with your study abroad goals or university admissions today?<br><hr>
+        📍 <strong>Cairo HQ:</strong> 1st Floor, Police Tower, Nawal St., Agouza, Giza<br>
+        📞 <strong>Phone / WhatsApp:</strong> +20 120 638 9999 / +20 2 33 385 110<br>
+        🌐 <strong>Website:</strong> www.topeduacademy.com
+      </div>
+    </div>
+  </div>
 
-I am your AI Student Counselor. How can I assist you with your study abroad goals or university admissions today?
+  <div class="suggestions" id="suggestionsBox">
+    <div class="chip" onclick="useChip(this)">🇩🇪 Requirements for Germany?</div>
+    <div class="chip" onclick="useChip(this)">🇮🇹 Italy scholarship details</div>
+    <div class="chip" onclick="useChip(this)">🇪🇸 Cost of studying in Spain</div>
+    <div class="chip" onclick="useChip(this)">📍 Where is your Cairo office?</div>
+  </div>
 
----
-📍 **Cairo HQ:** 1st Floor, Police Tower, Nawal St., Agouza, Giza  
-📞 **Phone / WhatsApp:** +20 120 638 9999 / +20 2 33 385 110
+  <footer>
+    <div class="input-box">
+      <input type="text" id="messageInput" placeholder="Ask a question about studying abroad..." onkeydown="if(event.key==='Enter') sendMsg()">
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Ensure marked parser uses breaks for newlines
+  marked.setOptions({ breaks: true });
+
+  const userId = "session_" + Math.random().toString(36).substring(2, 9);
+
+  function useChip(element) {
+    document.getElementById("messageInput").value = element.innerText;
+    sendMsg();
+  }
+
+  function hideSuggestions() {
+    const box = document.getElementById("suggestionsBox");
+    if (box) {
+      box.classList.add("hidden");
+    }
+  }
+
+  async function sendMsg() {
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    hideSuggestions();
+
+    appendMessage(text, "user");
+    input.value = "";
+    const typingId = showTyping();
+
+    try {
+      const res = await fetch("https://fatimawaelmohamed.pythonanywhere.com/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, message: text })
+      });
+      removeTyping(typingId);
+      const data = await res.json();
+      if (data.reply) {
+        appendMessage(data.reply, "bot");
+      } else {
+        appendMessage("⚠️ " + (data.error || "Unexpected server error."), "bot");
+      }
+    } catch (err) {
+      removeTyping(typingId);
+      appendMessage("❌ Cannot connect to backend server. Please try again later.", "bot");
+    }
+  }
+
+  function appendMessage(text, sender) {
+    const container = document.getElementById("chatContainer");
+    const row = document.createElement("div");
+    row.className = `msg-row ${sender}`;
+    
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerText = sender === "bot" ? "🤖" : "👤";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    if (sender === "bot") {
+      bubble.innerHTML = marked.parse(text);
+    } else {
+      bubble.innerText = text;
+    }
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function showTyping() {
+    const container = document.getElementById("chatContainer");
+    const id = "typing_" + Date.now();
+    const row = document.createElement("div");
+    row.className = "msg-row bot";
+    row.id = id;
+    row.innerHTML = `
+      <div class="avatar">🤖</div>
+      <div class="bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    `;
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+</script>
+</body>
+</html>
