@@ -114,10 +114,6 @@
     .msg-row.bot .bubble strong {
       color: #0284c7;
       font-weight: 700;
-      background: #f0f9ff;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid #bae6fd;
     }
     .msg-row.bot .bubble ul, .msg-row.bot .bubble ol {
       margin-left: 20px;
@@ -141,7 +137,7 @@
       font-weight: 500;
     }
     
-    /* Interactive Chips */
+    /* Interactive Chips Container */
     .suggestions {
       display: flex;
       gap: 10px;
@@ -150,6 +146,10 @@
       width: 100%;
       margin: 0 auto 16px auto;
       padding: 0 30px;
+      transition: all 0.3s ease-out;
+    }
+    .suggestions.hidden {
+      display: none !important;
     }
     .chip {
       background: #ffffff;
@@ -241,112 +241,15 @@
       <div class="status-dot"></div> Active
     </div>
   </header>
+  
   <div class="chat-container" id="chatContainer">
     <div class="msg-row bot">
       <div class="avatar">🤖</div>
-      <div class="bubble">Welcome to **TopEdu Academy**! 👋 How can I assist you with your study abroad goals today? Ask me about tuition fees, scholarships, or visa requirements!</div>
-    </div>
-  </div>
-  <div class="suggestions">
-    <div class="chip" onclick="useChip(this)">🇩🇪 Requirements for Germany?</div>
-    <div class="chip" onclick="useChip(this)">🇮🇹 Italy scholarship details</div>
-    <div class="chip" onclick="useChip(this)">🇪🇸 Cost of studying in Spain</div>
-    <div class="chip" onclick="useChip(this)">📍 Where is your Cairo office?</div>
-  </div>
-  <footer>
-    <div class="input-box">
-      <input type="text" id="messageInput" placeholder="Ask a question about studying abroad..." onkeydown="if(event.key==='Enter') sendMsg()">
-      <button onclick="sendMsg()">Send</button>
-    </div>
-  </footer>
-</div>
-<script>
-  // Format initial bot greeting on page load
-  document.addEventListener("DOMContentLoaded", () => {
-    const initialBubble = document.querySelector(".msg-row.bot .bubble");
-    if (initialBubble) {
-      initialBubble.innerHTML = marked.parse(initialBubble.innerText);
-    }
-  });
+      <div class="bubble">
+        👋 **Welcome to TopEdu Academy!**
 
-  const userId = "session_" + Math.random().toString(36).substring(2, 9);
+I am your AI Student Counselor. How can I assist you with your study abroad goals or university admissions today?
 
-  function useChip(element) {
-    document.getElementById("messageInput").value = element.innerText;
-    sendMsg();
-  }
-
-  async function sendMsg() {
-    const input = document.getElementById("messageInput");
-    const text = input.value.trim();
-    if (!text) return;
-
-    appendMessage(text, "user");
-    input.value = "";
-    const typingId = showTyping();
-
-    try {
-      const res = await fetch("https://fatimawaelmohamed.pythonanywhere.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, message: text })
-      });
-      removeTyping(typingId);
-      const data = await res.json();
-      if (data.reply) {
-        appendMessage(data.reply, "bot");
-      } else {
-        appendMessage("⚠️ " + (data.error || "Unexpected server error."), "bot");
-      }
-    } catch (err) {
-      removeTyping(typingId);
-      appendMessage("❌ Cannot connect to backend server. Please try again later.", "bot");
-    }
-  }
-
-  function appendMessage(text, sender) {
-    const container = document.getElementById("chatContainer");
-    const row = document.createElement("div");
-    row.className = `msg-row ${sender}`;
-    
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.innerText = sender === "bot" ? "🤖" : "👤";
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-
-    if (sender === "bot") {
-      bubble.innerHTML = marked.parse(text);
-    } else {
-      bubble.innerText = text;
-    }
-
-    row.appendChild(avatar);
-    row.appendChild(bubble);
-    container.appendChild(row);
-    container.scrollTop = container.scrollHeight;
-  }
-
-  function showTyping() {
-    const container = document.getElementById("chatContainer");
-    const id = "typing_" + Date.now();
-    const row = document.createElement("div");
-    row.className = "msg-row bot";
-    row.id = id;
-    row.innerHTML = `
-      <div class="avatar">🤖</div>
-      <div class="bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
-    `;
-    container.appendChild(row);
-    container.scrollTop = container.scrollHeight;
-    return id;
-  }
-
-  function removeTyping(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
-</script>
-</body>
-</html>
+---
+📍 **Cairo HQ:** 1st Floor, Police Tower, Nawal St., Agouza, Giza  
+📞 **Phone / WhatsApp:** +20 120 638 9999 / +20 2 33 385 110
